@@ -23,7 +23,11 @@
         "symfony/monolog-bundle"               : "~2.7",
         "symfony/swiftmailer-bundle"           : "~2.3",
         "symfony/symfony"                      : "~2.7",
-        "twig/extensions"                      : "~1.2"
+        "twig/extensions"                      : "~1.2",
+        "doctrine/migrations"                  : "1.0.*@dev",
+        "doctrine/doctrine-migrations-bundle"  : "1.0.*",
+        "willdurand/faker-bundle"              : "@stable",
+        "phing/phing"                          : "2.*"
     },
     "require-dev": {
         "sensio/generator-bundle": "~2.3"

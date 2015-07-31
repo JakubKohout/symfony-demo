@@ -1,0 +1,148 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project name="Symfony2 demo app" default="build">
+
+    <property name="path.build" value="${project.basedir}/build" />
+    <!-- File location with properties set only to this station -->
+    <property name="path.build.properties.local" value="${path.build}/properties.local" />
+    
+    <property file="${path.build.properties.local}" />
+
+    <!-- Symfony2 general configuration -->
+    <property name="file.mode.writable" value="0775" />
+    <property name="path.app" value="${path.root}/app" />
+    <property name="path.bin" value="${path.root}/bin" />
+    <property name="path.cache" value="${path.app}/cache" />
+    <property name="path.log" value="${path.app}/logs" />
+    <property name="path.root" value="${project.basedir}" />
+    <property name="path.src" value="${path.root}/src" />
+
+    <!-- Composer configuration -->
+    <property name="path.composer.executable" value="composer" />
+
+    <!-- PHPUnit configuration -->
+    <property name="path.phpunit.configuration" value="${path.root}/app/phpunit.xml" />
+    <property name="path.phpunit.executable" value="${path.bin}/phpunit" />
+    
+    <!-- Symfony2 project configuration -->
+    <property name="symfony.assets" value="true" />
+    <property name="path.fixtures" value="${path.src}/AppBundle/Tests/Fixtures" />
+
+    <target name="build" depends="
+        create-dirs,
+        copy-config,
+        composer-install,
+        composer-autoloader,
+        assets-install,
+        assetic-dump,
+        composer-install,
+        cache-warmup,
+        symfony-requirements
+        ">
+        <property name="symfony.environment" value="prod" />
+    </target>
+
+    <target name="build-dev" depends="
+        create-dirs,
+        copy-config,
+        tests,
+        composer-install
+        ">
+        <property name="symfony.environment" value="dev" />
+    </target>
+
+
+    <target name="build-ci" depends="
+        create-dirs,
+        copy-config,
+        composer-install,
+        tests
+        ">
+        <property name="symfony.environment" value="test" />
+    </target>
+
+    <target name="composer-install">
+        <exec
+            executable="${path.composer.executable}"
+            logoutput="true"
+            passthru="true"
+            checkreturn="true"
+        >
+            <arg value="install"/>
+            <arg value="--no-scripts"/>
+        </exec>
+    </target>
+
+    <target name="composer-autoloader">
+        <exec
+            executable="${path.composer.executable}"
+            logoutput="true"
+            passthru="true"
+            checkreturn="true"
+        >
+            <arg value="dump-autoload"/>
+            <arg value="--optimize"/>
+        </exec>
+    </target>
+
+    <target name="copy-config">
+        <copy file="${path.app}/config/parameters.yml.dist" tofile="${path.app}/config/parameters.yml"/>
+    </target>
+
+    <target name="create-dirs">
+        <mkdir dir="${path.cache}" mode="${file.mode.writable}"/>
+        <mkdir dir="${path.log}" mode="${file.mode.writable}"/>
+    </target>
+
+    <target name="tests">
+        <exec
+            executable="${path.phpunit.executable}"
+            logoutput="true"
+            passthru="true"
+            checkreturn="true"
+        >
+            <arg value="--configuration"/>
+            <arg value="${path.phpunit.configuration}"/>
+        </exec>
+    </target>
+
+    <target name="assetic-dump" description="Dump assets to filesystem">
+        <SymfonyConsole command="assetic:dump">
+            <arg name="env" value="${symfony.environment}" />
+        </SymfonyConsole>
+    </target>
+
+    <target name="cache-warmup" description="Cache warmup">
+        <SymfonyConsole command="cache:warmup">
+            <arg name="env" value="${symfony.environment}" />
+        </SymfonyConsole>
+    </target> 
+
+    <target name="assets-install" description="Install assets">
+        <SymfonyConsole command="assets:install">
+            <arg name="env" value="${symfony.environment}" />
+        </SymfonyConsole>
+    </target>   
+
+    <target name="symfony-requirements" description="Check symfony2 requirements"> 
+        <exec
+            executable="php"
+            logoutput="true"
+            passthru="true"
+            checkreturn="true"
+        >
+            <arg value="${path.app}/check.php"/>
+        </exec>
+    </target>
+
+    <target name="fixtures-generate" description="Generate Fixtures">
+        <SymfonyConsole command="doctrine:schema:drop">
+            <arg name="force"  />
+        </SymfonyConsole>
+        <SymfonyConsole command="doctrine:schema:create" />
+        <SymfonyConsole command="doctrine:fixture:load">
+            <arg name="fixtures" value="${path.fixtures}" />
+            <arg name="append"  />
+        </SymfonyConsole>
+
+    </target>
+</project>
